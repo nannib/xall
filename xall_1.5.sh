@@ -1,7 +1,7 @@
 #!/bin/bash 
 #
 # Xall - by Nanni Bassetti - digitfor@gmail.com - http://www.nannibassetti.com 
-# release: 1.2.2
+# release: 1.5
 #
 # It mounts a DD/EWF image file or a block device and extracts all the allocated files, it extracts all deleted files,
 # it makes a data carving on the unallocated space, then you have all ready for indexing with the program you prefer.
@@ -19,7 +19,7 @@ if [ "$(id -ru)" != "0" ];then
 	gksu -k -S -m "Enter root password to continue" -D "Xall requires root user priveleges." echo
 fi
 
-yad --title="XAll V.1.2.2" --width="300" --text "Welcome to XALL 1.2.2\n by Nanni bassetti\n http://www.nannibassetti.com\n The program ends with the message 'Operation succeeded!', so wait..."
+yad --title="XAll V.1.5" --width="300" --text "Welcome to XALL 1.5\n by Nanni bassetti\n http://www.nannibassetti.com\n The program ends with the message 'Operation succeeded!', so wait..."
 check_cancel 
 
 
@@ -44,7 +44,7 @@ mount_split_image()
         mkdir -p $MNTPNT
         xmount --in $ITYPE --out dd ${imm[@]} $MNTPNT
         imm=$MNTPNT/$(ls $MNTPNT|grep ".dd")
-        yad --title="XAll V.1.2.2" --width="300" --text "Virtual dd image created at $imm\n"
+        yad --title="XAll V.1.5" --width="300" --text "Virtual dd image created at $imm\n"
         echo "Virtual dd image created at $imm" >&2
     else
         imm=$(readlink -f ${imm})
@@ -143,7 +143,7 @@ check_delf
 check_dcarv
 
 (! mmls $imm 2>/dev/null 1>&2) && {
-   yad --title="XAll V.1.2.2" --text "The starting sector is '0'\n"
+   yad --title="XAll V.1.5" --text "The starting sector is '0'\n"
 check_cancel 
    so=0
 } || {
@@ -202,15 +202,11 @@ off=$(( $so * 512 ))
 # allocated files
 if [ $af == "Yes" ] 
 then 
-mount -t auto -o ro,loop,noauto,noexec,nodev,noatime,offset=$off,umask=222 $imm $BASE_IMG >/dev/null 2>&1 && {
-echo "Image file mounted in '$BASE_IMG'"
-}
+
 cn=$(($cl))
 
-cp -aR $BASE_IMG/* $allocated | yad  --progress --pulsate --auto-close --text="Copying allocated files..."  --width=250 --title="" --undecorated 
-umount $BASE_IMG >/dev/null 2>&1 
-echo "unmounted image file in '$BASE_IMG'"
-rm -rf $BASE_IMG | yad  --progress --pulsate --auto-close --text="Removing mounted directory..."  --width=250 --title="" --undecorated 
+tsk_recover -a -o $so $imm $allocated | yad  --progress --pulsate --auto-close --text="Copying allocated files..."  --width=250 --title="" --undecorated 
+
 fi
 
 # recovering the deleted files
